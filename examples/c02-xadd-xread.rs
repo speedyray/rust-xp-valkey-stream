@@ -1,5 +1,5 @@
 use redis::Commands;
-use redis::streams::{StreamReadOptions, StreamReadReply};
+use redis::streams::{StreamMaxlen, StreamReadOptions, StreamReadReply};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let stream_name = "stream-c02";
 
 	// -- Add
-	let _: () = con.xadd(stream_name, "*", &[("name", "Zimba"), ("surname", "Toola")])?;
+	let _: () = con.xadd(stream_name, "*", &[("name", "Mike"), ("surname", "Oconnor")])?;
 
 	// -- Read all Stream Records from the start
 	let res: StreamReadReply = con.xread(&[stream_name], &["0"])?;
@@ -21,6 +21,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let options = StreamReadOptions::default().count(1);
 	let res: StreamReadReply = con.xread_options(&[stream_name], &["0"], &options)?;
 	println!("Only one record for {stream_name}: {res:?} ");
+
+	let num:usize = con.xtrim(stream_name, StreamMaxlen::Equals(0))?;
+	println!("->> number of records trimmed: {num:#?}");
 
 	Ok(())
 }
